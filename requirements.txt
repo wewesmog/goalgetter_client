@@ -26,8 +26,12 @@ fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 pydantic>=2.0.0
 
-# HTTP client for Telegram API
+# HTTP client for Telegram API and remote MCP
 aiohttp>=3.9.0
+httpx>=0.25.0
+
+# Telegram bot (optional - for advanced Telegram features)
+python-telegram-bot>=20.0
 
 # Optional: For enhanced logging
 structlog>=23.0.0
