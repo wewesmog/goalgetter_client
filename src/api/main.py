@@ -87,11 +87,17 @@ async def lifespan(app: FastAPI):
             # Debug: Print the actual database URL being used
             print(f"🔍 DEBUG: Using database URL: {settings.database_url}")
             
-            # Create PostgreSQL checkpointer using the context manager approach
-            # but we'll store it globally to persist across requests
-            checkpointer_context = AsyncPostgresSaver.from_conn_string(settings.database_url)
+            # Create PostgreSQL checkpointer with connection pooling
+            # Use a connection string that includes pooling parameters
+            pool_url = settings.database_url
+            if "?" in pool_url:
+                pool_url += "&pool_min_conn=1&pool_max_conn=10&pool_timeout=30"
+            else:
+                pool_url += "?pool_min_conn=1&pool_max_conn=10&pool_timeout=30"
+            
+            checkpointer_context = AsyncPostgresSaver.from_conn_string(pool_url)
             checkpointer = await checkpointer_context.__aenter__()
-            print("✅ PostgreSQL connection established")
+            print("✅ PostgreSQL connection established with pooling")
             
             # Create orchestrator with checkpointer
             orchestrator = LangGraphOrchestrator(productivity_agent)

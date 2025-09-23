@@ -17,6 +17,9 @@ def setup_webhook():
     
     # Get webhook URL from environment or construct from Railway URL
     WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+    #TELEGRAM_BOT_TOKEN="8459291033:AAHsYN6YU-846Hq8IIuPMfMaGqoFAEpM8Tw"
+    TELEGRAM_BOT_TOKEN="8459291033:AAHsYN6YU-846Hq8IIuPMfMaGqoFAEpM8Tw"
+    WEBHOOK_URL = "https://goalgetterclient-production.up.railway.app/telegram/telegram-webhook"
     if not WEBHOOK_URL:
         # Try to construct from Railway URL
         railway_url = os.getenv("RAILWAY_STATIC_URL")
