@@ -386,6 +386,12 @@ async def telegram_webhook(request: Request):
                     clean_message = clean_message.replace("general", "").strip()
                     clean_message = clean_message.replace("None", "").strip()
                     
+                    # Fix escape characters - unescape quotes and newlines
+                    clean_message = clean_message.replace("\\'", "'")  # Fix escaped apostrophes
+                    clean_message = clean_message.replace('\\"', '"')  # Fix escaped quotes
+                    clean_message = clean_message.replace("\\n", "\n")  # Fix escaped newlines
+                    clean_message = clean_message.replace("\\\\", "\\")  # Fix double backslashes
+                    
                     # Remove multiple newlines and clean up
                     import re
                     clean_message = re.sub(r'\n\s*\n', '\n\n', clean_message)  # Replace multiple newlines

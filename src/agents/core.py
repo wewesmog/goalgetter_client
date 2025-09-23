@@ -37,10 +37,15 @@ class ProductivityAgent:
         self.is_remote_mcp = isinstance(self.mcp_server, HTTPMCPClient)
         
         if self.is_remote_mcp:
-            # For remote MCP, create agent without toolsets (we'll handle tools manually)
+            # For remote MCP, we need to create a wrapper that provides tools to PydanticAI
+            # Create a tool wrapper for the remote MCP client
+            from .mcp_wrapper import RemoteMCPWrapper
+            self.mcp_wrapper = RemoteMCPWrapper(self.mcp_server)
+            
             self.agent = Agent(
                 model=OpenAIChatModel("gpt-4o-mini"),
-                system_prompt=get_system_prompt()
+                system_prompt=get_system_prompt(),
+                toolsets=[self.mcp_wrapper]
             )
         else:
             # For local MCP, use standard PydanticAI integration
