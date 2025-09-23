@@ -15,7 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.models import ChatRequest, ChatResponse, HealthResponse, MemoryStatusResponse, TelegramUpdate, TelegramWebhookResponse, TelegramUser
-from src.agents.core import ProductivityAgent, LangGraphOrchestrator
+from src.agents.productivity_agent import ProductivityAgent
+from src.agents.core import LangGraphOrchestrator
 from src.services.memory_service import MemoryService
 from src.services.user_service import UserService
 from src.utils.logging import setup_logfire
@@ -375,6 +376,36 @@ async def telegram_webhook(request: Request):
                 if response.success:
                     # For Telegram, send only the clean message content, not the full response structure
                     clean_message = response.message
+                    
+                    # Handle AgentRunResult format specifically
+                    if "AgentRunResult" in clean_message:
+                        import re
+                        # Extract output from AgentRunResult(output='...') format
+                        match = re.search(r"output='([^']*)'", clean_message)
+                        if match:
+                            clean_message = match.group(1)
+                        else:
+                            # Fallback: try with double quotes
+                            match = re.search(r'output="([^"]*)"', clean_message)
+                            if match:
+                                clean_message = match.group(1)
+                    
+                    # Remove any remaining technical artifacts
+                    clean_message = re.sub(r'AgentRunResult\([^)]*\)', '', clean_message)
+                    clean_message = re.sub(r'content="[^"]*"', '', clean_message)
+                    clean_message = re.sub(r'additionalkwargs=\{[^}]*\}', '', clean_message)
+                    clean_message = re.sub(r'responsemetadata=\{[^}]*\}', '', clean_message)
+                    clean_message = re.sub(r'id=\'[^\']*\'', '', clean_message)
+                    clean_message = re.sub(r'Suggestions:\s*', '', clean_message)
+                    
+                    # Remove newline escape sequences and clean up
+                    clean_message = clean_message.replace('\\n\\n', '\n\n')
+                    clean_message = clean_message.replace('\\n', '\n')
+                    clean_message = clean_message.replace('\\"', '"')
+                    
+                    # Remove any remaining parentheses and brackets from technical formatting
+                    clean_message = re.sub(r'^\s*[\(\[\{].*?[\)\]\}]\s*', '', clean_message)
+                    clean_message = re.sub(r'[\(\[\{].*?[\)\]\}]\s*$', '', clean_message)
                     
                     # Additional cleanup for Telegram users - remove any remaining technical formatting
                     clean_message = clean_message.replace("message:", "").strip()
