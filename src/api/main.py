@@ -370,19 +370,46 @@ async def telegram_webhook(request: Request):
             # Process through your existing chat endpoint
             response = await chat(chat_request)
             
-            # Send response back to Telegram
-            if response.success:
-                await send_telegram_message(chat_data["id"], response.message)
-                logfire.info("Telegram webhook processed successfully", 
-                           user_id=user_data["id"], 
-                           chat_id=chat_data["id"])
-            else:
-                # Send error message to user
-                error_msg = f"Sorry, I encountered an error: {response.error or 'Unknown error'}"
-                await send_telegram_message(chat_data["id"], error_msg)
-                logfire.error("Telegram webhook processing failed", 
-                            user_id=user_data["id"], 
-                            error=response.error)
+            # Send response back to Telegram with error handling
+            try:
+                if response.success:
+                    # For Telegram, send only the clean message content, not the full response structure
+                    clean_message = response.message
+                    
+                    # Additional cleanup for Telegram users - remove any remaining technical formatting
+                    clean_message = clean_message.replace("message:", "").strip()
+                    clean_message = clean_message.replace("actiontype:", "").strip()  
+                    clean_message = clean_message.replace("summary:", "").strip()
+                    clean_message = clean_message.replace("data:", "").strip()
+                    clean_message = clean_message.replace("suggestions:", "").strip()
+                    clean_message = clean_message.replace("nextsteps:", "").strip()
+                    clean_message = clean_message.replace("general", "").strip()
+                    clean_message = clean_message.replace("None", "").strip()
+                    
+                    # Remove multiple newlines and clean up
+                    import re
+                    clean_message = re.sub(r'\n\s*\n', '\n\n', clean_message)  # Replace multiple newlines
+                    clean_message = clean_message.strip()
+                    
+                    await send_telegram_message(chat_data["id"], clean_message)
+                    logfire.info("Telegram webhook processed successfully", 
+                               user_id=user_data["id"], 
+                               chat_id=chat_data["id"])
+                else:
+                    # Send error message to user
+                    error_msg = f"Sorry, I encountered an error: {response.error or 'Unknown error'}"
+                    await send_telegram_message(chat_data["id"], error_msg)
+                    logfire.error("Telegram webhook processing failed", 
+                                user_id=user_data["id"], 
+                                error=response.error)
+            except Exception as telegram_error:
+                # If sending to Telegram fails, log it but don't crash the webhook
+                logfire.error("Failed to send message to Telegram", 
+                            chat_id=chat_data["id"],
+                            user_id=user_data["id"],
+                            telegram_error=str(telegram_error))
+                # Return success anyway so Telegram doesn't retry
+                print(f"❌ Failed to send Telegram message: {telegram_error}")
             
             return TelegramWebhookResponse(ok=True)
         else:
