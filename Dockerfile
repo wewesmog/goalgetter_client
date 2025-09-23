@@ -20,21 +20,17 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
-
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
-
 # Copy application code
 COPY main.py .
 COPY src/ ./src/
 COPY config/ ./config/
 COPY pyproject.toml .
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app
-USER app
+# Copy Python packages from builder
+COPY --from=builder /root/.local /root/.local
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
 
 # Expose port (if needed for health checks)
 EXPOSE 8000
