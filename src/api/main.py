@@ -386,6 +386,14 @@ async def telegram_webhook(request: Request):
                     clean_message = clean_message.replace("general", "").strip()
                     clean_message = clean_message.replace("None", "").strip()
                     
+                    # Remove action labels and technical artifacts
+                    clean_message = clean_message.replace("Action: goals", "").strip()
+                    clean_message = clean_message.replace("Action: habits", "").strip() 
+                    clean_message = clean_message.replace("Action:", "").strip()
+                    clean_message = clean_message.replace("Data:", "").strip()
+                    clean_message = clean_message.replace("Next Steps:", "").strip()
+                    clean_message = clean_message.replace("goals", "", 1).strip()  # Remove first occurrence only
+                    
                     # Fix escape characters - unescape quotes and newlines
                     clean_message = clean_message.replace("\\'", "'")  # Fix escaped apostrophes
                     clean_message = clean_message.replace('\\"', '"')  # Fix escaped quotes
