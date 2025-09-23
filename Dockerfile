@@ -27,6 +27,7 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
+COPY main.py .
 COPY src/ ./src/
 COPY config/ ./config/
 COPY pyproject.toml .
@@ -43,4 +44,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import sys; sys.exit(0)"
 
 # Run the application
-CMD ["python", "-m", "src.cli.main"]
+CMD ["python", "main.py"]
