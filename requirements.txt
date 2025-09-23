@@ -1,6 +1,6 @@
 # Core dependencies
 pydantic-ai>=1.0.0
-langgraph>=0.2.0
+langgraph[postgres]>=0.2.0
 langchain-core>=0.3.0
 logfire>=0.1.0
 
